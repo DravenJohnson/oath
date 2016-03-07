@@ -15,7 +15,7 @@ show_help(){
 }
 
 decrypt_keys(){
-	openssl enc -aes-256-cbc -d -in $1
+	openssl enc -aes-256-cbc -d -in keyFile/$1
 }
 
 add_keys(){
@@ -28,8 +28,8 @@ _show_codes(){
 	n=${#ENTRY[@]}
 
 	for i in `seq 0 $(($n-1))`; do
-		read -r label key <<< "${ENTRY[$i]}"
-		echo -n $label " "
+		read -r key <<< "${ENTRY[$i]}"
+		echo -n $2 " "
 		oathtool --totp --base32 $key
 	done
 }
@@ -42,7 +42,7 @@ show_codes(){
 	done < <(decrypt_keys $1)
 
 	while true; do
-		_show_codes ENTRIES[@]
+		_show_codes ENTRIES[@] $1
 		sleep 1
 	done
 }
