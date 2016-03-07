@@ -1,0 +1,73 @@
+#!/bin/bash
+
+COMMAND=$0
+FLAG=$1
+ACCOUNT=$2
+ACCKEY=$3
+
+show_help(){
+	echo ""
+	echo "Usage examples:"
+	echo "$1 -s {account alias} #Display verification codes"
+	echo "$1 -a {account alias} {account key} #Add encrypted keys file"
+	echo "$1 -h #Show this help"
+	echo ""
+}
+
+decrypt_keys(){
+	openssl enc -aes-256-cbc -d -in $1
+}
+
+add_keys(){
+	echo $2 | openssl enc -aes-256-cbc -out keyFile/$1
+
+}
+
+_show_codes(){
+	declare -a ENTRY=("${!1}")
+	n=${#ENTRY[@]}
+
+	for i in `seq 0 $(($n-1))`; do
+		read -r label key <<< "${ENTRY[$i]}"
+		echo -n $label " "
+		oathtool --totp --base32 $key
+	done
+}
+
+show_codes(){
+	n=0
+	while read l; do
+		ENTRIES[$n]="$l"
+		n=$(($n+1))
+	done < <(decrypt_keys $1)
+
+	while true; do
+		_show_codes ENTRIES[@]
+		sleep 1
+	done
+}
+
+while getopts ":sah" opt; do
+	case $opt in
+	s)
+    show_codes $ACCOUNT
+		exit 0
+		;;
+	a)
+		add_keys $ACCOUNT $ACCKEY
+		exit 0
+		;;
+	h)
+		show_help $0
+		exit 0
+		;;
+	\?)
+		echo "Invalid option: -$OPTARG"
+		show_help $0
+		exit 1
+	esac
+done
+
+show_help $0
+# echo "abcde" | openssl enc -aes-256-cbc -out key
+# openssl enc -aes-256-cbc -d -in key
