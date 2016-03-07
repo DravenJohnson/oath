@@ -1,0 +1,6 @@
+#!/bin/bash
+
+PASSWORD=$1
+BASE=${pwd -P}
+
+watch -n 5 -t $BASE/oath -a $PASSWORD

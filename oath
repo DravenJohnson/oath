@@ -3,71 +3,70 @@
 COMMAND=$0
 FLAG=$1
 ACCOUNT=$2
+PASSWORD=$2
 ACCKEY=$3
+
+BASE=~/Dev/Github.com/oath
 
 show_help(){
 	echo ""
 	echo "Usage examples:"
 	echo "$1 -s {account alias} #Display verification codes"
-	echo "$1 -a {account alias} {account key} #Add encrypted keys file"
+	echo "$1 -c {account alias} {account key} #Add encrypted keys file"
+	echo "$1 -a {password} #Show all account"
 	echo "$1 -h #Show this help"
 	echo ""
 }
 
 decrypt_keys(){
-	openssl enc -aes-256-cbc -d -in $1
+	KEY_FILE_NAME=$1
+	PASSWORD_FOR_FILE=$2
+	openssl enc -aes-256-cbc -d -in $BASE/keyFile/$KEY_FILE_NAME -pass pass:$PASSWORD_FOR_FILE
 }
 
 add_keys(){
-	echo $2 | openssl enc -aes-256-cbc -out keyFile/$1
+	KEYNAME=$1
+	KEYCONTENT=$2
+	echo $KEYCONTENT | openssl enc -aes-256-cbc -out $BASE/keyFile/$KEYNAME
 
-}
-
-_show_codes(){
-	declare -a ENTRY=("${!1}")
-	n=${#ENTRY[@]}
-
-	for i in `seq 0 $(($n-1))`; do
-		read -r label key <<< "${ENTRY[$i]}"
-		echo -n $label " "
-		oathtool --totp --base32 $key
-	done
 }
 
 show_codes(){
-	n=0
-	while read l; do
-		ENTRIES[$n]="$l"
-		n=$(($n+1))
-	done < <(decrypt_keys $1)
+	NAME=$1
+	KEY=$(decrypt_keys $1 $2)
+	echo -n $NAME " "
+	oathtool --totp --base32 $KEY
+}
 
-	while true; do
-		_show_codes ENTRIES[@]
-		sleep 1
+show_all(){
+	PASS=$1
+	for ENTRY in `ls $BASE/keyFile/`
+	do
+		show_codes $ENTRY $PASS
 	done
 }
 
 while getopts ":sah" opt; do
 	case $opt in
-	s)
-    show_codes $ACCOUNT
-		exit 0
-		;;
-	a)
-		add_keys $ACCOUNT $ACCKEY
-		exit 0
-		;;
-	h)
-		show_help $0
-		exit 0
-		;;
-	\?)
-		echo "Invalid option: -$OPTARG"
-		show_help $0
-		exit 1
+	  s)
+      show_codes $ACCOUNT
+		  exit 0
+		  ;;
+	  c)
+		  add_keys $ACCOUNT $ACCKEY
+		  exit 0
+		  ;;
+	  a)
+		  show_all $PASSWORD
+		  exit 0
+		  ;;
+	  h)
+		  show_help $COMMAND
+		  exit 0
+		  ;;
+	  \?)
+		  echo "Invalid option: -$OPTARG"
+		  show_help $COMMAND
+		  exit 1
 	esac
 done
-
-show_help $0
-# echo "abcde" | openssl enc -aes-256-cbc -out key
-# openssl enc -aes-256-cbc -d -in key
