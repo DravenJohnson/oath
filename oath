@@ -5,6 +5,17 @@ FLAG=$1
 ACCOUNT=$2
 ACCKEY=$3
 
+# cipher_share(){
+# 	wine CipherShareScriptingClient.exe \
+# 		$1
+# 		-UserName $2 -Password $3 \
+# 		-OfficeName 'psiphon' -DatabasePath ~/PsiphonV/OATH/ \
+# 		-ServerHost '174.129.228.48' -ServerPort '2222' \
+# 		-SourceDocument 'PsiphonV/OATH/' \
+# 		-TargetFile
+#
+# }
+
 show_help(){
 	echo ""
 	echo "Usage examples:"
