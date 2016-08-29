@@ -1,0 +1,6 @@
+#!/bin/bash
+
+PASSWORD=$1
+BASE=~/Dev/Github.com/oath
+
+watch -n 5 -t $BASE/oath -a $PASSWORD
